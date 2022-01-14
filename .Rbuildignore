@@ -1,0 +1,7 @@
+^renv$
+^renv\.lock$
+^descritiva\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^doc$
+^Meta$

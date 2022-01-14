@@ -1,0 +1,22 @@
+Package: descritiva
+Title: Breve análise descritiva
+Version: 0.1
+Authors@R: 
+    person(given = "Gilson",
+           family = "Lima",
+           role = c("aut", "cre"),
+           email = "gilsonll.contato@gmail.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Analise descritiva de um conjunto de dados.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Imports: 
+    dplyr
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder:
+    knitr,
+    rmarkdown

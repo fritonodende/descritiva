@@ -1,0 +1,68 @@
+---
+title: "Descritiva"
+subtitle: "Breve análise descritiva de um conjunto de dados"
+date: "`r Sys.Date()`"
+author: "Autor: Gilson Lima"
+output: rmarkdown::html_vignette
+
+vignette: >
+  %\VignetteIndexEntry{descritiva}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+### Para variáveis contínuas
+Breve análise descritiva de uma variável aleatória contínua. Nesse contexto a função descritiva() lê um conjunto de dados e retorna algumas medidas de posição e desvio padrão além de plotar seus boxplots.
+
+Carregar o pacote: 
+
+```{r}
+#carregar pacote
+library(descritiva)
+```
+
+Passar para a função o dataframe iris; a coluna Species, com a informação a priori; e uma lista que contém as colunas Petal.Length e Sepal.Length, a partir das quais serão calculadas as estatísticas que a função retorna. Seguem boxplot e dataframe com as informações calculadas
+
+```{r fig.height=8, fig.width=5}
+#função recebe df, coluna com info a priori e lista de variáveis
+descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+```
+
+
+### Gráfico de dispersão
+
+O Pacote possui ainda a função disp.descritiva() que plota o diagrama de dispersão de duas varáveis (x, y) de acordo com uma determina inforamação conhecida.
+
+A função recebe como argumentos um dataframe, o nome da coluna com a informação conhecida e uma lista com os nomes das colunas onde estão os dados que serão plotados no plano coordenado. É importante apontar que essa lista deve conter apenas a referência de duas colunas, uma vez que elas correspondem aos eixos x e y respectivamente.
+
+```{r fig.height = 3, fig.width = 8}
+#função recebe df, coluna com info a priori e lista de variáveis
+disp.descritiva(iris, "Species", c("Sepal.Length", "Sepal.Width"))
+```
+
+
+### Sobreposição de histograma e função de densidade
+Para uma comparação visual entre o histograma e a curva de densidade do conjunto de dados.
+
+
+```{r fig.height = 8, fig.width = 5}
+dens.descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+```
+
+### Para variáveis qualitativas e categorias
+Como estratégia de análise descritiva de variáveis qualitativas e categóricas o pacote oferece a possibilidade de criar uma tabela de frequência de conjunto de dados
+
+```{r fig.height = 5, fig.width = 5}
+mtcars_ <- mtcars
+mtcars_$am[mtcars_$am==0]<-"automatico"
+mtcars_$am[mtcars_$am==1]<-"manual"
+freq.descritiva(mtcars_, "am", c("cyl", "gear"))
+```
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
