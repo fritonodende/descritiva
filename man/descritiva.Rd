@@ -24,7 +24,7 @@ Para comparar diagramas de dispersão duas variáveis e uma informação conheci
 
 Para comparar histograma e curva da função de densidade do conjunto de dados utilizar \code{\link[=dens.descritiva]{dens.descritiva()}}. A quantidade de classes é definida pela regra de Sturges
 
-Para \\U00fdvariáveis qualitativas ou categóricas utilizar \link[=dens.descritiva]{freq.descritiva()} para obter tabela de frequência e gráfico de barras
+Para variáveis qualitativas ou categóricas utilizar \link[=dens.descritiva]{freq.descritiva()} para obter tabela de frequência e gráfico de barras
 }
 \examples{
 

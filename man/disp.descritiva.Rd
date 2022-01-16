@@ -2,19 +2,19 @@
 % Please edit documentation in R/disp.R
 \name{disp.descritiva}
 \alias{disp.descritiva}
-\title{Diagramas de disperso a partir de uma informao conhecida}
+\title{Diagramas de dispersão a partir de uma informação conhecida}
 \usage{
 disp.descritiva(dados, condicional, vars)
 }
 \arguments{
-\item{dados}{Dataframe com ao menos trs colunas, uma com a informao a priori e no mnimo outras duas com valores para coordenadas x e y}
+\item{dados}{Dataframe com ao menos três colunas, uma com a informação a priori e no mínimo outras duas com valores para coordenadas x e y}
 
-\item{condicional}{Coluna em que est a informao conhecida (priori)}
+\item{condicional}{Coluna em que está a informação conhecida (priori)}
 
-\item{vars}{Lista com os nomes das duas colunas ( x e y, nessa ordem) que formaro as coordenadas do plano cartesiano}
+\item{vars}{Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano}
 }
 \description{
-Essa funo l um conjunto de dados e plota diagramas de disperso para observao do comportamento de uma determinada relo entre variveis de acordo com informaes a priori
+Essa função lê um conjunto de dados e plota diagramas de dispersão para observação do comportamento de uma determinada relação entre variáveis de acordo com informações a priori
 }
 \examples{
 

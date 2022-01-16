@@ -6,7 +6,7 @@
 #'
 #' Para comparar histograma e curva da função de densidade do conjunto de dados utilizar [dens.descritiva()][dens.descritiva()]. A quantidade de classes é definida pela regra de Sturges
 #'
-#' Para \\U00fdvariáveis qualitativas ou categóricas utilizar [freq.descritiva()][dens.descritiva()] para obter tabela de frequência e gráfico de barras
+#' Para variáveis qualitativas ou categóricas utilizar [freq.descritiva()][dens.descritiva()] para obter tabela de frequência e gráfico de barras
 #'
 #' @param dados Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para calcular estatísticas
 #'
@@ -83,40 +83,40 @@ descritiva <- function(dados, condicional, vars){
 
   #a seguir o primeiro for() acessa informações de cada condicional por vez
 
-  for (j in 1:nrow(priori)) {
+  for (i in 1:nrow(priori)) {
 
     #já o segundo acessa as colunas com os valores utilizados para construção do resumo descritivo
 
-    for (i in 1:length(vars)) {
+    for (j in 1:length(vars)) {
 
       #contrução de nome para título das colunas do df resumo
 
-      col_nome <- paste(vars[i],'|', priori[j, 1], sep = "")
+      col_nome <- paste(vars[j],'|', priori[i, 1], sep = "")
 
       #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
 
-      dados_temp<-dplyr::filter(dados, dados[[condicional]]==as.character(priori[j,1]))
+      dados_temp<-dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
 
       #aqui ele é resumido à coluna definida por cada ciclo do segundo for
 
-      dados_temp<-subset(dados_temp, select=c(vars[i]))
+      dados_temp<-subset(dados_temp, select=c(vars[j]))
 
       #inserção de nova coluna no df resumo com as estatísticas calculadas
 
-      resumo[, col_nome] <- c(nrow(dplyr::filter(dados, dados[[condicional]]==as.character(priori[j,1]))),
-                              min(dados_temp[[vars[i]]]),
-                              max(dados_temp[[vars[i]]]),
-                              max(dados_temp[[vars[i]]])-min(dados_temp[[vars[i]]]),
-                              stats::quantile(dados_temp[[vars[i]]], c(.1)),
-                              stats::quantile(dados_temp[[vars[i]]], c(.25)),
-                              stats::quantile(dados_temp[[vars[i]]], c(.5)),
-                              stats::quantile(dados_temp[[vars[i]]], c(.75)),
-                              stats::quantile(dados_temp[[vars[i]]], c(.9)),
-                              mean(dados_temp[[vars[i]]], na.rm = TRUE),
-                              stats::var(dados_temp[[vars[i]]], na.rm = TRUE),
-                              stats::sd(dados_temp[[vars[i]]], na.rm = TRUE),
-                              (stats::quantile(dados_temp[[vars[i]]], c(.75))-stats::quantile(dados_temp[[vars[i]]], c(.5)))-(stats::quantile(dados_temp[[vars[i]]], c(.5))-stats::quantile(dados_temp[[vars[i]]], c(.25)))/(stats::quantile(dados_temp[[vars[i]]], c(.75))-stats::quantile(dados_temp[[vars[i]]], c(.5)))+(stats::quantile(dados_temp[[vars[i]]], c(.5))-stats::quantile(dados_temp[[vars[i]]], c(.25))),
-                              (stats::quantile(dados_temp[[vars[i]]], c(.75))-stats::quantile(dados_temp[[vars[i]]], c(.25)))/(2*(stats::quantile(dados_temp[[vars[i]]], c(.9))-stats::quantile(dados_temp[[vars[i]]], c(.1)))))
+      resumo[, col_nome] <- c(nrow(dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))),
+                              min(dados_temp[[vars[j]]]),
+                              max(dados_temp[[vars[j]]]),
+                              max(dados_temp[[vars[j]]])-min(dados_temp[[vars[j]]]),
+                              stats::quantile(dados_temp[[vars[j]]], c(.1)),
+                              stats::quantile(dados_temp[[vars[j]]], c(.25)),
+                              stats::quantile(dados_temp[[vars[j]]], c(.5)),
+                              stats::quantile(dados_temp[[vars[j]]], c(.75)),
+                              stats::quantile(dados_temp[[vars[j]]], c(.9)),
+                              mean(dados_temp[[vars[j]]], na.rm = TRUE),
+                              stats::var(dados_temp[[vars[j]]], na.rm = TRUE),
+                              stats::sd(dados_temp[[vars[j]]], na.rm = TRUE),
+                              (stats::quantile(dados_temp[[vars[j]]], c(.75))-stats::quantile(dados_temp[[vars[j]]], c(.5)))-(stats::quantile(dados_temp[[vars[j]]], c(.5))-stats::quantile(dados_temp[[vars[j]]], c(.25)))/(stats::quantile(dados_temp[[vars[j]]], c(.75))-stats::quantile(dados_temp[[vars[j]]], c(.5)))+(stats::quantile(dados_temp[[vars[j]]], c(.5))-stats::quantile(dados_temp[[vars[j]]], c(.25))),
+                              (stats::quantile(dados_temp[[vars[j]]], c(.75))-stats::quantile(dados_temp[[vars[j]]], c(.25)))/(2*(stats::quantile(dados_temp[[vars[j]]], c(.9))-stats::quantile(dados_temp[[vars[j]]], c(.1)))))
     }
   }
 
@@ -126,24 +126,24 @@ descritiva <- function(dados, condicional, vars){
 
   #primeiro for para navegar entre priores
 
-  for (k in 1:nrow(priori)) {
+  for (i in 1:nrow(priori)) {
 
     #segundo for para navegar pelas colunas com os valores
 
-    for (i in 1:length(vars)) {
+    for (j in 1:length(vars)) {
 
       #definir limites da área de plotagem para melhor comparação visual entre as proris
 
-      lim_min_y <- min(dados[[vars[i]]])
-      lim_max_y <- max(dados[[vars[i]]])
+      lim_min_y <- min(dados[[vars[j]]])
+      lim_max_y <- max(dados[[vars[j]]])
 
       #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
 
-      dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[k,1]))
+      dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
 
       #aqui ele é resumido à coluna definida por cada ciclo do segundo for
 
-      dados_temp<-subset(dados_temp, select = c(vars[i]))
+      dados_temp<-subset(dados_temp, select = c(vars[j]))
 
       #plot do boxplot
 
@@ -152,7 +152,7 @@ descritiva <- function(dados, condicional, vars){
 
       #ajuste e contrução do título do boxplot
 
-      graphics::mtext(paste(vars[i],' | ', priori[k, 1], sep = ""), side = 1, line = 1)
+      graphics::mtext(paste(vars[j],' | ', priori[i, 1], sep = ""), side = 1, line = 1)
     }
   }
 

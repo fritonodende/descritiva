@@ -6,7 +6,7 @@ author: "Autor: Gilson Lima"
 output: rmarkdown::html_vignette
 
 vignette: >
-  %\VignetteIndexEntry{descritiva}
+  %\VignetteIndexEntry{Descritiva}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -56,7 +56,8 @@ Como estratégia de análise descritiva de variáveis qualitativas e categórica
 mtcars_ <- mtcars
 mtcars_$am[mtcars_$am==0]<-"automatico"
 mtcars_$am[mtcars_$am==1]<-"manual"
-freq.descritiva(mtcars_, "am", c("cyl", "gear"))
+tab<-freq.descritiva(mtcars_, "am", c("cyl", "gear"))
+print(tab)
 ```
 
 

@@ -13,6 +13,9 @@ freq.descritiva(dados, condicional, vars)
 
 \item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão plotados o gráfico de barras e construida a tabela de frequência}
 }
+\value{
+Lista com as tabelas de frequência de cada evento A dado B
+}
 \description{
 Lê conjunto de dados e retorna uma tabela de frequência com observações, frequência absoluta e proporcional
 }
