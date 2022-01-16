@@ -14,7 +14,7 @@ dens.descritiva(dados, condicional, vars)
 \item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão plotados o histograma e curva de densidade}
 }
 \value{
-Plot com histograma e curva de densidade
+Lista com Plots de histogramas e curvas de densidade
 }
 \description{
 Lê um conjunto de dados e plota a sobreposição do seu histograma e curva de densidade para observar o comportamento da distribuição dos dados

@@ -120,23 +120,21 @@ descritiva <- function(dados, condicional, vars){
     }
   }
 
-  #iniciar lista com plot de todos os gráficos juntos
+  #iniciar lista que vai armazenar plot de todos os gráficos juntos
 
   plot_td <- list()
+
+  ind <- 1 #iniciar contador que define quando armazenar o plot
 
   #preparar saída com todos boxplots na mesma janela
 
   graphics::par(mfrow=c(nrow(priori),length(vars)))
 
-  #iniciar contador que define quando gravar o plot
-
-  ind <- 1
-
   #primeiro for para navegar entre priores
 
   for (i in 1:nrow(priori)) {
 
-    #segundo for para navegar pelas colunas com os valores
+    #já o segundo acessa as colunas com os valores utilizados para construção da tabela e gráficos
 
     for (j in 1:length(vars)) {
 
@@ -171,7 +169,7 @@ descritiva <- function(dados, condicional, vars){
     }
   }
 
-  #iniciar lista que vai receber cada um dos gráficos
+  #iniciar lista que vai armazenar cada um dos gráficos indivualmente
 
   graficos <- list()
 

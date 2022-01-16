@@ -128,7 +128,7 @@ freq.descritiva <- function(dados, condicional, vars){
 
       #renomear coluna com colnome definindo acima
 
-      names(graficos)[ind]<-colnome
+      names(graficos)[ind] <- colnome
 
       ind = ind+1 #incrementar contador para navegar na lista graficos
     }

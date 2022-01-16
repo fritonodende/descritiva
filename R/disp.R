@@ -66,11 +66,11 @@ disp.descritiva <- function(dados, condicional, vars){
     dados_temp<-dplyr::filter(dados, dados[[condicional]]==as.character(priori[i,1]))
 
     graphics::plot(x=dados_temp[[1]], y=dados_temp[[2]],
-             xlim=c(lim_min_x,lim_max_x),
-             ylim=c(lim_min_y,lim_max_y),
-             xlab="",
-             ylab="",
-             col=i)
+                   xlim=c(lim_min_x,lim_max_x),
+                   ylim=c(lim_min_y,lim_max_y),
+                   xlab="",
+                   ylab="",
+                   col=i)
 
     #ajuste e contrução do subtítulo do gráfico
 
