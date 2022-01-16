@@ -29,12 +29,11 @@ freq.descritiva <- function(dados, condicional, vars){
 
   priori <- as.data.frame(table(dados[[condicional]]))
 
-  #iniciar variaveis de retorno saida e graficos
-  #onde estarão tabelas de frequências e gráficos respectivamente
+  #iniciar variaveis de retorno onde estarão tabelas de frequências e gráficos respectivamente
 
-  saida <- list()
-  graficos <- list()
-  plot_td <- list()
+  saida <- list()     #lista com tabelas de frequência
+  graficos <- list()  #lista com gráficos individuais de cada A|B
+  plot_td <- list()   #lista com plot de todos os gráficos juntos
 
   #contador que permite navegar pelas listas
 
@@ -115,7 +114,7 @@ freq.descritiva <- function(dados, condicional, vars){
 
       #armazenar os gráficos sem plotar na janela. indicações passo a passo
 
-      grDevices::dev.new()                     #passo 1
+      grDevices::win.metafile()                #passo 1
       grDevices::dev.control('enable')         #passo 2
       graphics::par(bg="white")                #passo 3
       graphics::barplot(tab_)                  #passo 4 plotar gráfico
@@ -139,7 +138,7 @@ freq.descritiva <- function(dados, condicional, vars){
 
   saida <- saida[order(names(saida))]           #lista com tabelas de frequencia
   graficos <- graficos[order(names(graficos))]  #lista com gráficos individuais
-  retorno <- c(saida, graficos, plot_td)        #lista que a função retorna. plot_td foi definido anteriormente
+  retorno <- list("tabelas de frequencia" = saida, "graficos" = graficos, "plot geral"= plot_td)        #lista que a função retorna. plot_td foi definido anteriormente
 
   return(invisible(retorno))
 }

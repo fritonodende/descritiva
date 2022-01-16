@@ -120,9 +120,17 @@ descritiva <- function(dados, condicional, vars){
     }
   }
 
+  #iniciar lista com plot de todos os gráficos juntos
+
+  plot_td <- list()
+
   #preparar saída com todos boxplots na mesma janela
 
   graphics::par(mfrow=c(nrow(priori),length(vars)))
+
+  #iniciar contador que define quando gravar o plot
+
+  ind <- 1
 
   #primeiro for para navegar entre priores
 
@@ -149,20 +157,85 @@ descritiva <- function(dados, condicional, vars){
 
       graphics::boxplot(dados_temp,
                 ylim=c(lim_min_y,lim_max_y))
+      graphics::title(xlab = (paste(vars[j],' | ', priori[i, 1], sep = "")), line = 1) #xlabel
 
-      #ajuste e contrução do título do boxplot
+      #na última repetição, armazenar plotagem geral para retorno da função
 
-      graphics::mtext(paste(vars[j],' | ', priori[i, 1], sep = ""), side = 1, line = 1)
+      if(nrow(priori)*length(vars) == ind){
+        graphics::mtext(paste("Evento(s)",' | ', condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+        plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+        names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
+      }
+
+      ind <- ind+1
     }
   }
+
+  #iniciar lista que vai receber cada um dos gráficos
+
+  graficos <- list()
+
+  #iniciar o contador que vai permitir navegar pela lista graficos
+
+  ind <- 1
 
   #resetar janela de saída dos plots
 
   graphics::par(mfrow=c(1,1))
 
+  #primeiro for para navegar entre priores
+
+  for (i in 1:nrow(priori)) {
+
+    #segundo for para navegar pelas colunas com os valores
+
+    for (j in 1:length(vars)) {
+
+      #definir limites da área de plotagem para melhor comparação visual entre as proris
+
+      lim_min_y <- min(dados[[vars[j]]])
+      lim_max_y <- max(dados[[vars[j]]])
+
+      #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
+
+      dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
+
+      #aqui ele é resumido à coluna definida por cada ciclo do segundo for
+
+      dados_temp<-subset(dados_temp, select = c(vars[j]))
+
+      #armazenar os gráficos sem plotar na janela. indicações passo a passo
+
+      grDevices::win.metafile()                        #passo 1
+      grDevices::dev.control('enable')                 #passo 2
+      graphics::par(bg = "white")                      #passo 3
+      graphics::boxplot(dados_temp,                    #passo 4 plotar boxplot
+                        ylim = c(lim_min_y,lim_max_y)) #passo 5 ajustar limites
+      graphics::title(xlab = (paste(vars[j],' | ', priori[i, 1], sep = "")), line = 1) #passo 6 legenda eixo x
+      graficos[[ind]] <- grDevices::recordPlot()       #passo 7 armazenar cada plot para retorno na função
+      grDevices::dev.off()                             #passo 8 fim dessa etapa
+
+      #construindo nome das colunas para cada A|B
+
+      colnome <- paste(vars[j], "|", as.character(priori[i,1]))
+
+      #renomear coluna com colnome definindo acima
+
+      names(graficos)[ind]<-colnome
+
+      ind <- ind+1
+    }
+  }
+
   #retorno da função
 
   resumo<-round(resumo, 2)
 
-  return(resumo)
+  #exibir resumo para quando o usuário não associar a função à uma variável
+
+  print(resumo)
+
+  retorno<-list("resumo" = resumo, "graficos" = graficos, "plot geral" = plot_td)
+
+  return(invisible(retorno))
 }
