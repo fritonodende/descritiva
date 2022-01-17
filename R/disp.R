@@ -14,6 +14,7 @@
 #'
 #' @examples
 #'
+#'
 #' #Exemplo 1:
 #' #função recebe: dataset iris,
 #' #               info a priori "Species"
