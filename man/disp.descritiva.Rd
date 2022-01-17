@@ -13,6 +13,9 @@ disp.descritiva(dados, condicional, vars)
 
 \item{vars}{Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano}
 }
+\value{
+A função retorna uma lista com diagramas de dispersão combinados e individuais do conjunto de dados observado bem como as tabelas definidas por cada priori
+}
 \description{
 Essa função lê um conjunto de dados e plota diagramas de dispersão para observação do comportamento de uma determinada relação entre variáveis de acordo com informações a priori
 }

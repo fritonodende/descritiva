@@ -142,7 +142,7 @@ dens.descritiva <- function(dados, condicional, vars){
       apoio_graf <- graphics::hist(dados_temp[[vars[j]]], prob=TRUE) #passo 4
       grDevices::dev.off()             #passo 5
 
-      apoio_graf <- as.data.frame(summary(apoio_graf)) #fincona melhor como df
+      apoio_graf <- as.data.frame(summary(apoio_graf)) #funciona melhor como df
 
       #mínimo e máximmo para definir limites do esxo x
 

@@ -8,6 +8,8 @@
 #'
 #' @param vars Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano
 #'
+#' @return A função retorna uma lista com diagramas de dispersão combinados e individuais do conjunto de dados observado bem como as tabelas definidas por cada priori
+#'
 #' @export
 #'
 #' @examples
@@ -44,13 +46,13 @@ disp.descritiva <- function(dados, condicional, vars){
 
   dados <- subset(dados, select=c(vars, condicional))
 
+  #garantir que a coluna com a informação conhecida é fator ou dá erro com priori numérica
+
+  dados[[3]]<-as.factor(dados[[3]])
+
   #criar dataframe com a informação a priori
 
   priori <- as.data.frame(table(dados[[condicional]]))
-
-  #preparar saída com todos os gráficos na mesma janela
-
-  graphics::par(mfrow = c(1, nrow(priori)))
 
   #definir limites eixos x e y
 
@@ -59,25 +61,90 @@ disp.descritiva <- function(dados, condicional, vars){
   lim_min_y <- min(dados[[vars[2]]])
   lim_max_y <- max(dados[[vars[2]]])
 
-  #plotar o diagrama de dispersão , o for acessa cada priori por vez
+  #iniciar listas que serão parâmetros dos gráficos
+
+  shapes <-vector()           #formas
+  config_legenda <- vector()  #cores
+
+  #for preenche listas de configuração
+
+  for (i in 1:nrow(priori)) {
+    shapes[i] <- i+14
+    config_legenda[i] <- i+14
+  }
+
+  #configuração de shapes (se passar sem esses parâmetros não funciona)
+
+  shapes <- shapes[as.numeric(dados[[3]])]
+
+  #iniciar lista que vai armazenar plot geral
+
+  plot_td <- list()
+
+  #preparar saída para gráfico geral
+
+  graphics::par(mfrow = c(1, 1))
+
+  #plotar o diagrama de dispersão geral
+
+  graphics::plot(x = dados[[1]], y = dados[[2]],      #plot do gráfico
+                 xlim = c(lim_min_x,lim_max_x),
+                 ylim = c(lim_min_y,lim_max_y),
+                 xlab = vars[1],
+                 ylab = vars[2],
+                 col = as.integer(dados[[3]])+1,
+                 pch = shapes)
+
+  #construção da legenda e título geral
+
+  graphics::legend("bottomright", title = condicional, legend = levels(dados[[3]]), col = as.integer(config_legenda)+nrow(priori), pch = as.integer(config_legenda)) #legenda
+  graphics::mtext(paste(vars[1], ' x ', vars[2],' | ', condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+  plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+  names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
+
+  #iniciar listas que armazenam tabelas e gráficos individuais
+
+  graficos <- list()  #lista com gráficos individuais de cada A|B
+  tabelas <- list()   #lista com tabelas utilizadas para construção de cada gráfico
+
+  #for para construir um gráfico por vez
 
   for (i in 1:nrow(priori)) {
 
-    dados_temp<-dplyr::filter(dados, dados[[condicional]]==as.character(priori[i,1]))
+    #filtrar dados de interesse
 
-    graphics::plot(x=dados_temp[[1]], y=dados_temp[[2]],
-                   xlim=c(lim_min_x,lim_max_x),
-                   ylim=c(lim_min_y,lim_max_y),
-                   xlab="",
-                   ylab="",
-                   col=i)
+    dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
 
-    #ajuste e contrução do subtítulo do gráfico
+    #armazenar os gráficos sem plotar na janela. indicações passo a passo
 
-    graphics::mtext(paste(vars[1], ' x ', vars[2],' | ', priori[i, 1], sep = ""), cex=.8, side = 1, line = 3)
+    grDevices::win.metafile()                #passo 1
+    grDevices::dev.control('enable')         #passo 2
+    graphics::par(bg="white")                #passo 3
+
+    graphics::plot(x = dados_temp[[1]], y = dados_temp[[2]], #passo 4
+                   main = paste(vars[1], ' x ', vars[2],' | ', priori[i, 1], sep = ""),
+                   font.main = 1,
+                   cex.main = .99,
+                   xlim = c(lim_min_x,lim_max_x),
+                   ylim = c(lim_min_y,lim_max_y),
+                   xlab = vars[1],
+                   ylab = vars[2],
+                   col = as.integer(config_legenda[i])+nrow(priori),
+                   pch = i+14)
+    graficos[[i]] <- grDevices::recordPlot() #passo 5
+    grDevices::dev.off()                     #passo 6 fim dessa etapa
+
+    #contrução e atribuição das colunas das listas ciniciadas anteriormente
+
+    colnome <- paste(paste(vars[1], ' x ', vars[2],' | ', priori[i, 1], sep = ""))
+    names(graficos)[i] <- colnome
+    tabelas[[i]]<-dados_temp
+    names(tabelas)[i] <- colnome
   }
 
-  #resetar janela de saída dos plots
+  #preparar lista que a função retorna
 
-  graphics::par(mfrow=c(1,1))
+  retorno<-list("tabelas" = tabelas, "graficos" = graficos, "plot geral"=plot_td)
+
+  return(invisible(retorno))
 }
