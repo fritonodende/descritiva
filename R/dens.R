@@ -14,7 +14,6 @@
 #'
 #' @examples
 #'
-#'
 #' dens.descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
 #'
 dens.descritiva <- function(dados, condicional, vars){

@@ -14,7 +14,6 @@
 #'
 #' @examples
 #'
-#'
 #' mtcars_ <- mtcars
 #' mtcars_$am[mtcars_$am == 0] <- "automatico"
 #' mtcars_$am[mtcars_$am == 1] <- "manual"
