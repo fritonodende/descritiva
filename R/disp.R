@@ -1,6 +1,6 @@
 #' Diagramas de dispersão a partir de uma informação conhecida
 #'
-#' Essa função lê um conjunto de dados e plota diagramas de dispersão para observação do comportamento de uma determinada relação entre variáveis de acordo com informações a priori
+#' Essa função lê um conjunto de dados e plota diagramas de dispersão para observação do comportamento de uma determinada relação entre variáveis de acordo com informações conhecidas a priori
 #'
 #' @param dados Dataframe com ao menos três colunas, uma com a informação a priori e no mínimo outras duas com valores para coordenadas x e y
 #'
