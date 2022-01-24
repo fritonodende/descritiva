@@ -4,7 +4,17 @@
 \alias{descritiva}
 \title{Breve análise descritiva de uma variável aleatória contínua}
 \usage{
-descritiva(dados, condicional, vars)
+descritiva(
+  dados,
+  condicional,
+  vars,
+  dg = FALSE,
+  hor = FALSE,
+  tabs = TRUE,
+  grafs = NULL,
+  grade = c(1, 1),
+  titulo = FALSE
+)
 }
 \arguments{
 \item{dados}{Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para calcular estatísticas}
@@ -12,6 +22,18 @@ descritiva(dados, condicional, vars)
 \item{condicional}{Coluna em que está a informação conhecida}
 
 \item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão calculadas as estatísticas}
+
+\item{dg}{Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais}
+
+\item{hor}{Lógico, default = FALSE, TRUE para exibir boxplot horizontal}
+
+\item{tabs}{Lógico, default = TRUE, FALSE para não exibir tabelas de resumo quando a função é executada}
+
+\item{grafs}{vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna}
+
+\item{grade}{vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs}
+
+\item{titulo}{Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"}
 }
 \value{
 Dataframe 14 x n -onde n é a quantidade de variáveis observadas- com mínimo, máximo, amplitude, percentil 10, 1o quartil, mediana, 3o quartil, percentil 90, média, variância, desvio padrão, coefiente de variação (apenas quando variância e média tem mesmo sinal), coeficiente de assimetria de Bowley e coeficiente percentílico de curtose.

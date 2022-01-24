@@ -8,6 +8,12 @@
 #'
 #' @param vars Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano
 #'
+#' @param grafs vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna
+#'
+#' @param grade vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs
+#'
+#' @param titulo Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"
+#'
 #' @return A função retorna uma lista com diagramas de dispersão combinados e individuais do conjunto de dados observado bem como as tabelas definidas por cada priori
 #'
 #' @export
@@ -28,7 +34,7 @@
 #'
 #' disp.descritiva(mtcars, "cyl", c("mpg", "qsec"))
 #'
-disp.descritiva <- function(dados, condicional, vars){
+disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,1), titulo = FALSE){
 
   #confirmar se objeto enviado para função é um df
 
@@ -81,31 +87,33 @@ disp.descritiva <- function(dados, condicional, vars){
 
   plot_td <- list()
 
+  tabelas <- list()
+
   #preparar saída para gráfico geral
 
-  graphics::par(mfrow = c(1, 1))
+  graphics::par(mfrow = c(1, nrow(priori)+1))
 
   #plotar o diagrama de dispersão geral
 
   graphics::plot(x = dados[[1]], y = dados[[2]],      #plot do gráfico
+                 main = paste(vars[1], ' x ', vars[2],' | ', condicional, sep = ""),
+                 font.main = 1,
+                 cex.main = .99,
                  xlim = c(lim_min_x,lim_max_x),
                  ylim = c(lim_min_y,lim_max_y),
                  xlab = vars[1],
                  ylab = vars[2],
                  col = as.integer(dados[[3]])+1,
-                 pch = shapes)
+                 pch = shapes,
+                 cex = 1.5)
 
   #construção da legenda e título geral
 
   graphics::legend("bottomright", title = condicional, legend = levels(dados[[3]]), col = as.integer(config_legenda)+nrow(priori), pch = as.integer(config_legenda)) #legenda
-  graphics::mtext(paste(vars[1], ' x ', vars[2],' | ', condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
   plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
   names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
-
-  #iniciar listas que armazenam tabelas e gráficos individuais
-
-  graficos <- list()  #lista com gráficos individuais de cada A|B
-  tabelas <- list()   #lista com tabelas utilizadas para construção de cada gráfico
+  tabelas[[1]] <- dados   #lista com tabelas utilizadas para construção de cada gráfico
+  names(tabelas)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
 
   #for para construir um gráfico por vez
 
@@ -115,13 +123,7 @@ disp.descritiva <- function(dados, condicional, vars){
 
     dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
 
-    #armazenar os gráficos sem plotar na janela. indicações passo a passo
-
-    grDevices::win.metafile()                #passo 1
-    grDevices::dev.control('enable')         #passo 2
-    graphics::par(bg="white")                #passo 3
-
-    graphics::plot(x = dados_temp[[1]], y = dados_temp[[2]], #passo 4
+    graphics::plot(x = dados_temp[[1]], y = dados_temp[[2]],
                    main = paste(vars[1], ' x ', vars[2],' | ', priori[i, 1], sep = ""),
                    font.main = 1,
                    cex.main = .99,
@@ -130,21 +132,47 @@ disp.descritiva <- function(dados, condicional, vars){
                    xlab = vars[1],
                    ylab = vars[2],
                    col = as.integer(config_legenda[i])+nrow(priori),
-                   pch = i+14)
-    graficos[[i]] <- grDevices::recordPlot() #passo 5
-    grDevices::dev.off()                     #passo 6 fim dessa etapa
+                   pch = i+14,
+                   cex = 1.5)
 
     #contrução e atribuição das colunas das listas ciniciadas anteriormente
 
     colnome <- paste(paste(vars[1], ' x ', vars[2],' | ', priori[i, 1], sep = ""))
-    names(graficos)[i] <- colnome
-    tabelas[[i]]<-dados_temp
-    names(tabelas)[i] <- colnome
+    tabelas[[i+1]]<-dados_temp
+    names(tabelas)[i+1] <- colnome
   }
 
   #preparar lista que a função retorna
 
-  retorno<-list("tabelas" = tabelas, "graficos" = graficos, "plot geral"=plot_td)
+  retorno<-list("tabelas" = tabelas, "plot geral"=plot_td)
 
+  if(!(is.null(grafs))){
+
+    graphics::par(mfrow = grade)
+
+    for(i in 1:length(grafs)){
+
+      graphics::plot(x = (unlist(retorno[[1]][[grafs[i]]][1])), y = (unlist(retorno[[1]][[grafs[i]]][2])), #passo 4
+                     main = paste(names(retorno[[1]][grafs[i]]), sep = ""),
+                     font.main = 1,
+                     cex.main = .99,
+                     xlim = c(lim_min_x,lim_max_x),
+                     ylim = c(lim_min_y,lim_max_y),
+                     xlab = vars[1],
+                     ylab = vars[2],
+                     col = as.integer(dados[[3]])+i,
+                     pch = shapes+i,
+                     cex = 1.5)
+    }
+
+    if( titulo != FALSE){
+      if(titulo == TRUE)
+      {
+        graphics::mtext(paste("Eventos A x B","|", condicional, sep = ""), side = 3, line = -1.4, outer = TRUE) #título geral
+      }else{
+        graphics::mtext(titulo, side = 3, line = -1.4, outer = TRUE) #título geral
+      }
+    }
+  }
   return(invisible(retorno))
 }

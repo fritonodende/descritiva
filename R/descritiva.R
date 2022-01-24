@@ -14,6 +14,18 @@
 #'
 #' @param vars Lista com nomes das colunas em que estão os valores com os quais serão calculadas as estatísticas
 #'
+#' @param dg  Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais
+#'
+#' @param hor Lógico, default = FALSE, TRUE para exibir boxplot horizontal
+#'
+#' @param tabs Lógico, default = TRUE, FALSE para não exibir tabelas de resumo quando a função é executada
+#'
+#' @param grafs vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna
+#'
+#' @param grade vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs
+#'
+#' @param titulo Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"
+#'
 #' @seealso
 #'
 #' \code{\link{dens.descritiva}} Retorna histograma e curva de densidade
@@ -46,7 +58,7 @@
 #'
 #' descritiva(mtcars, "cyl", "mpg")
 #'
-descritiva <- function(dados, condicional, vars){
+descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs = TRUE, grafs = NULL, grade = c(1,1), titulo = FALSE){
 
   #confirmar se objeto enviado para função é um df
 
@@ -57,6 +69,12 @@ descritiva <- function(dados, condicional, vars){
   #limitar dataframe às informações de interesse
 
   dados <- subset(dados, select=c(vars, condicional))
+
+  #iniciar, definir e ocnfigurar a tabela geral, sem definição de priori, que faz parte do retorno da função
+
+  tab_geral <- list()
+  tab_geral[[1]] <- dados
+  names(tab_geral)[1] <- "tabela.geral"
 
   #criar dataframe com a informação a priori
 
@@ -89,9 +107,9 @@ descritiva <- function(dados, condicional, vars){
 
     for (j in 1:length(vars)) {
 
-      #contrução de nome para título das colunas do df resumo
+      #construção de nome para título das colunas do df resumo
 
-      col_nome <- paste(vars[j],'|', priori[i, 1], sep = "")
+      col_nome <- paste(vars[j],"|", priori[i, 1], sep = "")
 
       #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
 
@@ -120,15 +138,46 @@ descritiva <- function(dados, condicional, vars){
     }
   }
 
+  #para o caso do parâmetro dg (dados gerais) estar definido como TRUE
+
+  if(dg == TRUE){
+
+    for(j in 1:length(vars)){
+
+    resumo[, paste(vars[j],".dados.gerais", sep = "")] <- c(nrow(dados),
+                                                            min(dados[[vars[j]]]),
+                                                            max(dados[[vars[j]]]),
+                                                            max(dados[[vars[j]]])-min(dados[[vars[j]]]),
+                                                            stats::quantile(dados[[vars[j]]], c(.1)),
+                                                            stats::quantile(dados[[vars[j]]], c(.25)),
+                                                            stats::quantile(dados[[vars[j]]], c(.5)),
+                                                            stats::quantile(dados[[vars[j]]], c(.75)),
+                                                            stats::quantile(dados[[vars[j]]], c(.9)),
+                                                            mean(dados[[vars[j]]], na.rm = TRUE),
+                                                            stats::var(dados[[vars[j]]], na.rm = TRUE),
+                                                            stats::sd(dados[[vars[j]]], na.rm = TRUE),
+                                                            (stats::quantile(dados[[vars[j]]], c(.75))-stats::quantile(dados[[vars[j]]], c(.5)))-(stats::quantile(dados[[vars[j]]], c(.5))-stats::quantile(dados[[vars[j]]], c(.25)))/(stats::quantile(dados[[vars[j]]], c(.75))-stats::quantile(dados[[vars[j]]], c(.5)))+(stats::quantile(dados[[vars[j]]], c(.5))-stats::quantile(dados[[vars[j]]], c(.25))),
+                                                            (stats::quantile(dados[[vars[j]]], c(.75))-stats::quantile(dados[[vars[j]]], c(.25)))/(2*(stats::quantile(dados[[vars[j]]], c(.9))-stats::quantile(dados[[vars[j]]], c(.1)))))
+    }
+  }
+
   #iniciar lista que vai armazenar plot de todos os gráficos juntos
 
   plot_td <- list()
 
+  #iniciar lista que vai armazanar as tabelas definidas por cada priori
+
+  tabs_ <- list()
+
   ind <- 1 #iniciar contador que define quando armazenar o plot
 
-  #preparar saída com todos boxplots na mesma janela
+  #preparar saída com todos boxplots na mesma janela, definição defende do estado do parâmetro dg
 
-  graphics::par(mfrow=c(nrow(priori),length(vars)))
+  if (dg == TRUE){
+    graphics::par(mfrow=c(nrow(priori)+1,length(vars)))
+  }else{
+    graphics::par(mfrow=c(nrow(priori),length(vars)))
+  }
 
   #primeiro for para navegar entre priores
 
@@ -151,89 +200,135 @@ descritiva <- function(dados, condicional, vars){
 
       dados_temp<-subset(dados_temp, select = c(vars[j]))
 
+      #aqui a lista de tabelas recebe cada tabela A|B e tem os nomes de cada coluna definido
+
+      tabs_[[ind]] <- dados_temp
+      names(tabs_)[ind] <- paste(vars[j], "|", as.character(priori[i,1]), sep = "")
+
       #plot do boxplot
 
       graphics::boxplot(dados_temp,
-                ylim=c(lim_min_y,lim_max_y))
-      graphics::title(xlab = (paste(vars[j],' | ', priori[i, 1], sep = "")), line = 1) #xlabel
+                        horizontal = hor,
+                        xlab = paste(vars[j],"|", priori[i, 1], sep = ""),
+                        ylim=c(lim_min_y,lim_max_y))
 
       #na última repetição, armazenar plotagem geral para retorno da função
 
       if(nrow(priori)*length(vars) == ind){
-        graphics::mtext(paste("Evento(s)",' | ', condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+        graphics::mtext(paste("Evento(s)","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
         plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
         names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
       }
 
-      ind <- ind+1
+      ind <- ind + 1 #incremento do índice que percorre a lista com as tabelas A|B
     }
   }
 
-  #iniciar lista que vai armazenar cada um dos gráficos indivualmente
+  #para dg definido como TRUE acrescentar gráficos e tabelas com dados gerais
 
-  graficos <- list()
+  if(dg == TRUE){
 
-  #iniciar o contador que vai permitir navegar pela lista graficos
+    for(i in 1:length(vars)){
+    lim_min_y <- min(dados[[vars[i]]])
+    lim_max_y <- max(dados[[vars[i]]])
+    graphics::boxplot(dados[[vars[i]]],
+                      horizontal = hor,
+                      xlab = paste(vars[i],".dados.gerais", sep = ""),
+                      ylim=c(lim_min_y,lim_max_y))
+    }
 
-  ind <- 1
+    #atualização da captura do plot geral
 
-  #resetar janela de saída dos plots
+    plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+    names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
 
-  graphics::par(mfrow=c(1,1))
 
-  #primeiro for para navegar entre priores
+    for(i in 1:length(vars)){
+        tabs_ [[paste(vars[i],".dados.gerais", sep = "")]]<- dados[[vars[i]]]
+    }
+  }
 
-  for (i in 1:nrow(priori)) {
+  #preparar retorno da função
 
-    #segundo for para navegar pelas colunas com os valores
+  resumo <- round(resumo, 2) #tabela com estatísticas de resumo
 
-    for (j in 1:length(vars)) {
+  #exibir resumo para quando o usuário não associar a função à uma variável, desativado quando tabs = FALSE
 
-      #definir limites da área de plotagem para melhor comparação visual entre as proris
+  if(tabs == TRUE){
 
-      lim_min_y <- min(dados[[vars[j]]])
-      lim_max_y <- max(dados[[vars[j]]])
+  print(resumo)
 
-      #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
+  }
 
-      dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
+  #organizar lista retornada pela função
 
-      #aqui ele é resumido à coluna definida por cada ciclo do segundo for
+  retorno<-list("resumo" = resumo, "plot geral" = plot_td, "tabela geral" = tab_geral, "tabelas" = tabs_)
 
-      dados_temp<-subset(dados_temp, select = c(vars[j]))
+  #ajustes para gráfico customizado, parametro graf definido pelo usuário
 
-      #armazenar os gráficos sem plotar na janela. indicações passo a passo
+  if(!(is.null(grafs))){
 
-      grDevices::win.metafile()                        #passo 1
-      grDevices::dev.control('enable')                 #passo 2
-      graphics::par(bg = "white")                      #passo 3
-      graphics::boxplot(dados_temp,                    #passo 4 plotar boxplot
-                        ylim = c(lim_min_y,lim_max_y)) #passo 5 ajustar limites
-      graphics::title(xlab = (paste(vars[j],' | ', priori[i, 1], sep = "")), line = 1) #passo 6 legenda eixo x
-      graficos[[ind]] <- grDevices::recordPlot()       #passo 7 armazenar cada plot para retorno na função
-      grDevices::dev.off()                             #passo 8 fim dessa etapa
+    #preparar teste para saber se há apenas um tipo de evento no gráfico
+    #quando só há um evento o eixo y mantém os mesmos limites em todos os boxplots
+    #facilitando a comparação
 
-      #construindo nome das colunas para cada A|B
+    teste_ <- list()
+    contrateste_ <- list()
 
-      colnome <- paste(vars[j], "|", as.character(priori[i,1]))
+    for(i in 1:length(grafs)){
+      teste_[i] <- names(retorno[[4]][[grafs[i]]])
+      contrateste_[i] <- names(retorno[[4]][[grafs[1]]])
+    }
 
-      #renomear coluna com colnome definindo acima
+    #resultado do teste define decisões sobre limites dos plots a seguir
 
-      names(graficos)[ind]<-colnome
+    teste <- isTRUE(all.equal(teste_, contrateste_))
 
-      ind <- ind+1
+    if(teste){
+
+      #iniciar e preencher dataframe com y max e min
+
+      ymin_ymax <- data.frame()
+      for(i in 1:length(grafs)){
+       ymin_ymax <- rbind(ymin_ymax, retorno[[4]][[grafs[i]]])
+      }
+    }
+
+    #definir grade para graficos customizados
+
+    graphics::par(mfrow = grade)
+
+    #plotar gráfico customizado
+
+    for(i in 1:length(grafs)){
+
+      dados_custom <- retorno[[4]][[grafs[i]]]
+
+      if(teste){
+          graphics::boxplot(dados_custom,
+                          horizontal = hor,
+                          xlab=names(retorno[[4]][grafs[i]]),
+                          ylim=c(min(ymin_ymax), max(ymin_ymax)))
+      }else{
+          graphics::boxplot(dados_custom,
+                          horizontal = hor,
+                          xlab=names(retorno[[4]][grafs[i]]))
+      }
+    }
+
+    #titulo do grafico customizado definido pelo parâmetro titulo = TRUE
+
+    if( titulo != FALSE){
+        if(titulo == TRUE)
+        {
+        graphics::mtext(paste("Eventos","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+        }else{
+          graphics::mtext(titulo, side = 3, line = -2, outer = TRUE) #título geral
+        }
     }
   }
 
   #retorno da função
-
-  resumo<-round(resumo, 2)
-
-  #exibir resumo para quando o usuário não associar a função à uma variável
-
-  print(resumo)
-
-  retorno<-list("resumo" = resumo, "graficos" = graficos, "plot geral" = plot_td)
 
   return(invisible(retorno))
 }

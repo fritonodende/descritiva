@@ -8,6 +8,14 @@
 #'
 #' @param vars Lista com nomes das colunas em que estão os valores com os quais serão plotados o histograma e curva de densidade
 #'
+#' @param dg  Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais
+#'
+#' @param grafs vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna
+#'
+#' @param grade vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs
+#'
+#' @param titulo Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"
+#'
 #' @return Lista com Plots de histogramas e curvas de densidade
 #'
 #' @export
@@ -16,7 +24,7 @@
 #'
 #' dens.descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
 #'
-dens.descritiva <- function(dados, condicional, vars){
+dens.descritiva <- function(dados, condicional, vars, dg = FALSE, grafs = NULL, grade = c(1,1), titulo = FALSE){
 
   #confirmar se objeto enviado para função é um df
 
@@ -36,11 +44,29 @@ dens.descritiva <- function(dados, condicional, vars){
 
   plot_td <- list()
 
+  #iniciar e armazenar lista com dados gerais
+
+  dados_geral <- list()
+  dados_geral[[1]] <- dados
+  names(dados_geral)[[1]] <- "dados.gerais"
+
+  #iniciar lista que vai armazenar dados para plots customizados
+
+  dados_plot <- list()
+
   ind <- 1 #iniciar contador que define quando armazenar o plot
 
   #preparar saída com todos os gráficos na mesma janela
 
-  graphics::par(mfrow = c(nrow(priori),length(vars)))
+  if(dg == TRUE){ #teste para dados gerais
+
+    graphics::par(mfrow = c(nrow(priori)+1,length(vars)))
+
+  }else{
+
+    graphics::par(mfrow = c(nrow(priori),length(vars)))
+
+  }
 
   #primeiro for para navegar entre priores
 
@@ -54,29 +80,24 @@ dens.descritiva <- function(dados, condicional, vars){
 
     for (j in 1:length(vars)) {
 
-      #iniciar rotina para armazenar informções do histograma sem o plotar
+      #lista recebe dados para o plot
 
-      grDevices::win.metafile()        #passo 1
-      grDevices::dev.control('enable') #passo 2
+      dados_plot[[ind]] <- dados_temp[[vars[j]]]
 
-      #apoio_graf é um objeto de apoio para acessar número classes pela regra de
-      #sturges e definir passo para break no eixo x nclass.Sturges não funcionou
+      #renomeando coluna para rápida identificação
 
-      apoio_graf <- graphics::hist(dados_temp[[vars[j]]], prob=TRUE) #passo 3
-      grDevices::dev.off()             #passo 4
-
-      apoio_graf <- as.data.frame(summary(apoio_graf)) #funciona melhor como df
+      names(dados_plot)[ind]<-paste(vars[j],"|", priori[i, 1], sep = "")
 
       #mínimo e máximmo para definir limites do eixo x
 
       min_ <- min(dados_temp[[vars[j]]])
       max_ <- max(dados_temp[[vars[j]]])
 
-      #numero de classes retirado de apoio_graf
+      #número de classes definido pela regra de sturges
 
-      classes <- as.integer(apoio_graf[2,3])
+      classes <- grDevices::nclass.Sturges(dados_temp[[vars[j]]])
 
-      #encontrar passos e definir vetor de breaks no eixo x
+      #definição da amplitude de classe e vetor com breaks
 
       passo <- (max_-min_)/classes
       vetorBrk <- seq(min_, max_, by=passo)
@@ -89,7 +110,7 @@ dens.descritiva <- function(dados, condicional, vars){
                 prob = TRUE,
                 main = NULL,
                 ylab = "Densidade",
-                xlab = paste(vars[j],' | ', priori[i, 1], sep = ""))
+                xlab = paste(vars[j],"|", priori[i, 1], sep = ""))
 
       #curva de densidade
 
@@ -98,105 +119,119 @@ dens.descritiva <- function(dados, condicional, vars){
       #na última repetição, armazenar plotagem geral para retorno da função
 
       if(nrow(priori)*length(vars) == ind){
-        graphics::mtext(paste("Evento(s)",' | ', condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+        graphics::mtext(paste("Evento(s)","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
         plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
         names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
       }
-      ind <- ind+1
+
+      ind <- ind + 1 #atualizar contador da lista de dados dos plots
     }
   }
 
-  # a próxima etapa apenas armazena os gráficos na lista gráficos
+  #teste para plotar dados gerais
 
-  # iniciar lista que vai armazenar gráficos individuais
+  if(dg == TRUE){
 
-  graficos <- list()
+      #for para percorrer lista de dados dos plots
 
-  #iniciar contador que permite navegar pela lista
+      for (j in 1:length(vars)) {
 
-  ind <- 1
+        #incluir dados gerais em dados dos plots
 
-  #reseta janela de saida para apenas um plot
+        dados_plot[[paste(vars[j],".dados.gerais", sep = "")]] <- dados[[vars[j]]]
 
-  graphics::par(mfrow = c(1,1))
+        #mínimo e máximmo para definir limites do eixo x
 
-  #primeiro for para navegar entre priores
+        min_ <- min(dados[[vars[j]]])
+        max_ <- max(dados[[vars[j]]])
 
-  for (i in 1:nrow(priori)) {
+        #numero de classes definido pela regra de sturges
 
-    dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
+        classes <- grDevices::nclass.Sturges(dados[[vars[j]]])
 
-    #já o segundo acessa as colunas com os valores utilizados para construção dos histogramas
+        #encontrar passos e definir vetor de breaks no eixo x
 
-    for (j in 1:length(vars)) {
+        passo <- (max_-min_)/classes
+        vetorBrk <- seq(min_, max_, by=passo)
+        vetorBrk <- vetorBrk
 
-      #armazenar os gráficos sem plotar na janela. indicações passo a passo
+        #plotar histograma
 
-      grDevices::win.metafile()        #passo 1
-      grDevices::dev.control('enable') #passo 2
-      graphics::par(bg="white")        #passo 3
+        graphics::hist(dados[[vars[j]]],
+                       breaks = vetorBrk,
+                       xaxp = c(min_,max_,classes),
+                       prob = TRUE,
+                       main = NULL,
+                       ylab = "Densidade",
+                       xlab = paste(vars[j],".dados.gerais", sep = ""))
 
-      #apoio_graf é um objeto de apoio para acessar número classes pela regra de
-      #sturges e definir passo para break no eixo x nclass.Sturges não funcionou
+        #curva de densidade
 
-      apoio_graf <- graphics::hist(dados_temp[[vars[j]]], prob=TRUE) #passo 4
-      grDevices::dev.off()             #passo 5
+        graphics::lines(stats::density(dados[[vars[j]]]))
 
-      apoio_graf <- as.data.frame(summary(apoio_graf)) #funciona melhor como df
+        plot_td[[1]] <- grDevices::recordPlot() #atualizar plot geral para retorno na função
+      }
+  }
 
-      #mínimo e máximmo para definir limites do esxo x
+  #contruir lista que a função retorna
 
-      min_ <- min(dados_temp[[vars[j]]])
-      max_ <- max(dados_temp[[vars[j]]])
+  retorno <- list("plot geral" = plot_td, "dados plots" = dados_plot, "dados gerais" = dados_geral)
 
-      #numero de classes retirado de apoio_graf
+  #testar para gráficos customizados
 
-      classes <- as.integer(apoio_graf[2,3])
+  if(!(is.null(grafs))){
+
+    graphics::par(mfrow = grade) #definido pelo parâmetro grade passado para a função
+
+    for (i in 1:length(grafs)) {
+
+      #mínimo e máximmo para definir limites do eixo x
+
+      min_ <- min(retorno[[2]][[grafs[i]]])
+      max_ <- max(retorno[[2]][[grafs[i]]])
+
+      #numero de classes definido pela regra de sturges
+
+      classes <- grDevices::nclass.Sturges(retorno[[2]][[grafs[i]]])
 
       #encontrar passos e definir vetor de breaks no eixo x
 
       passo <- (max_-min_)/classes
       vetorBrk <- seq(min_, max_, by=passo)
 
-      #armazenar os gráficos sem plotar na janela. indicações passo a passo
+      #construir histogramas que serão exibidos
 
-      grDevices::win.metafile()                #passo 1
-      grDevices::dev.control('enable')         #passo 2
-      graphics::par(bg="white")                #passo 3
-
-      #construir histograma
-
-      graphics::hist(dados_temp[[vars[j]]],    #passo 4
-                     breaks=vetorBrk,
-                     xaxp=c(min_,max_,classes),
-                     prob=TRUE,
-                     main=NULL,
-                     ylab="Densidade",
-                     xlab=paste(vars[j],' | ', priori[i, 1], sep = ""))
+      graphics::hist(retorno[[2]][[grafs[i]]],
+                     breaks = vetorBrk,
+                     xaxp = c(min_,max_,classes),
+                     prob = TRUE,
+                     main = NULL,
+                     ylab = "Densidade",
+                     xlab = paste(names(retorno[[2]][grafs[i]]), sep = ""))
 
       #curva de densidade
 
-      graphics::lines(stats::density(dados_temp[[vars[j]]])) #passo 5
+      graphics::lines(stats::density(retorno[[2]][[grafs[i]]]))
 
-      graficos[[ind]] <- grDevices::recordPlot() #passo 6 armazenar o plot na lista graficos
+    }
 
-      grDevices::dev.off()                     #passo 7
+    #teste do parâmerto titulo
 
-      #construindo nome das colunas para cada A|B
+    if( titulo != FALSE){
 
-      colnome <- paste(vars[j], "|", as.character(priori[i,1]))
+      if(titulo == TRUE){
 
-      #renomear coluna com colnome definindo acima
+        graphics::mtext(paste("Eventos","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
 
-      names(graficos)[ind] <- colnome
+      }else{
 
-      ind <- ind + 1 #incrementar contador de acesso à lista gráficos
+        graphics::mtext(titulo, side = 3, line = -2, outer = TRUE) #título personalizado
+
+      }
     }
   }
 
-  #contruir lista que a função retorna
-
-  retorno <- list("graficos" = graficos, "plot geral" = plot_td)
+  #retorno da função
 
   return(invisible(retorno))
 }

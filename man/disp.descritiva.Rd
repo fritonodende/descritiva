@@ -4,7 +4,14 @@
 \alias{disp.descritiva}
 \title{Diagramas de dispersão a partir de uma informação conhecida}
 \usage{
-disp.descritiva(dados, condicional, vars)
+disp.descritiva(
+  dados,
+  condicional,
+  vars,
+  grafs = NULL,
+  grade = c(1, 1),
+  titulo = FALSE
+)
 }
 \arguments{
 \item{dados}{Dataframe com ao menos três colunas, uma com a informação a priori e no mínimo outras duas com valores para coordenadas x e y}
@@ -12,6 +19,12 @@ disp.descritiva(dados, condicional, vars)
 \item{condicional}{Coluna em que está a informação conhecida (priori)}
 
 \item{vars}{Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano}
+
+\item{grafs}{vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna}
+
+\item{grade}{vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs}
+
+\item{titulo}{Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"}
 }
 \value{
 A função retorna uma lista com diagramas de dispersão combinados e individuais do conjunto de dados observado bem como as tabelas definidas por cada priori

@@ -4,7 +4,15 @@
 \alias{dens.descritiva}
 \title{Sobreposição de histograma e curva da função de densidade}
 \usage{
-dens.descritiva(dados, condicional, vars)
+dens.descritiva(
+  dados,
+  condicional,
+  vars,
+  dg = FALSE,
+  grafs = NULL,
+  grade = c(1, 1),
+  titulo = FALSE
+)
 }
 \arguments{
 \item{dados}{Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para plotar histograma e boxplot}
@@ -12,6 +20,14 @@ dens.descritiva(dados, condicional, vars)
 \item{condicional}{Coluna em que está a informação conhecida}
 
 \item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão plotados o histograma e curva de densidade}
+
+\item{dg}{Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais}
+
+\item{grafs}{vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna}
+
+\item{grade}{vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs}
+
+\item{titulo}{Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"}
 }
 \value{
 Lista com Plots de histogramas e curvas de densidade
