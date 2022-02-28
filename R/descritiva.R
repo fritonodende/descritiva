@@ -1,18 +1,22 @@
-#' Breve análise descritiva de uma variável aleatória contínua
+#' Breve analise descritiva de uma variavel aleatoria continua
 #'
 #' Essa função lê um conjunto de dados e com base em uma informação a priori retorna algumas medidas de posição além de desvio padrão, coeficiente de assimetria de Bowley e coeficiente percentílico de curtose; a função ainda plota boxplots do conjunto de dados
 #'
-#' Para comparar diagramas de dispersão duas variáveis e uma informação conhecida de um conjunto de dados utilizar [disp.descritiva()][dens.descritiva()]
+#' Para comparar diagramas de dispersão duas variáveis e uma informação conhecida de um conjunto de dados utilizar [disp.descritiva()][disp.descritiva()]
 #'
 #' Para comparar histograma e curva da função de densidade do conjunto de dados utilizar [dens.descritiva()][dens.descritiva()]. A quantidade de classes é definida pela regra de Sturges
 #'
-#' Para variáveis qualitativas ou categóricas utilizar [freq.descritiva()][dens.descritiva()] para obter tabela de frequência e gráfico de barras
+#' Para variáveis qualitativas ou categóricas utilizar [freq.descritiva()][freq.descritiva()] para obter tabela de frequência e gráfico de barras
+#'
+#' Utilizar [asg.est()][asg.est()] para estimar parâmetros mi, sigma e alpha para a função densidade de probabilidade da distribuição Alpha Skew Gaussian (ASG)
 #'
 #' @param dados Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para calcular estatísticas
 #'
+#' @param vars Lista com nomes das colunas em que estão os valores com os quais serão calculadas as estatísticas
+#'
 #' @param condicional Coluna em que está a informação conhecida
 #'
-#' @param vars Lista com nomes das colunas em que estão os valores com os quais serão calculadas as estatísticas
+#' @param classe Caso queira definir as classes que deseja analisar
 #'
 #' @param dg  Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais
 #'
@@ -37,6 +41,9 @@
 #' @seealso
 #'
 #' \code{\link{freq.descritiva}} Retorna tabela de frequência e gráfico de barra
+#' @seealso
+#'
+#' \code{\link{asg.est}} Retorna valores de mi, sigma e alpha para a função densidade de probabilidade da distribuição Alpha Skew Gaussian (ASG)
 #'
 #' @return Dataframe 14 x n -onde n é a quantidade de variáveis observadas- com mínimo, máximo, amplitude, percentil 10, 1o quartil, mediana, 3o quartil, percentil 90, média, variância, desvio padrão, coefiente de variação (apenas quando variância e média tem mesmo sinal), coeficiente de assimetria de Bowley e coeficiente percentílico de curtose.
 #'
@@ -49,16 +56,25 @@
 #' #               info a priori "Species"
 #' #               observações das colunas "Petal.Length" e "Sepal.Length"
 #'
-#' descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+#' descritiva(iris, c("Petal.Length", "Sepal.Length"), "Species")
 #'
 #' #Exemplo 2:
 #' #função recebe: dataset mtcars,
 #' #               info a priori "cyl"
 #' #               observações da colunas "mpg"
 #'
-#' descritiva(mtcars, "cyl", "mpg")
+#' descritiva(mtcars, "mpg", "cyl")
 #'
-descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs = TRUE, grafs = NULL, grade = c(1,1), titulo = FALSE){
+descritiva <- function(dados,
+                       vars,
+                       condicional,
+                       classe = NULL,
+                       dg = FALSE,
+                       hor = FALSE,
+                       tabs = TRUE,
+                       grafs = NULL,
+                       grade = c(1,1),
+                       titulo = FALSE){
 
   #confirmar se objeto enviado para função é um df
 
@@ -70,7 +86,7 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
   dados <- subset(dados, select=c(vars, condicional))
 
-  #iniciar, definir e ocnfigurar a tabela geral, sem definição de priori, que faz parte do retorno da função
+  #iniciar, definir e configurar a tabela geral, sem definição de priori, que faz parte do retorno da função
 
   tab_geral <- list()
   tab_geral[[1]] <- dados
@@ -78,26 +94,56 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
   #criar dataframe com a informação a priori
 
-  priori<-as.data.frame(table(dados[[condicional]]))
+  priori <- as.data.frame(table(dados[[condicional]]))
+
+  #caso a classe seja definida
+
+  if(!is.null(classe)){
+      priori <- dplyr::filter(priori, priori[[1]] %in% classe)
+  }
 
   #iniciar dataframe de resumo das estatísticas com nomes das linhas
 
   resumo<-as.data.frame(matrix(ncol = 0, nrow = 14))
 
-  row.names(resumo)<-c("qntd_obs",
+  row.names(resumo)<-c("qtd_obs",
                        "min",
                        "max",
                        "amplitude",
-                       "percentil_10",
+                       "perc_10",
                        "1o_qrtl",
                        "mediana",
                        "3o_qrtl",
-                       "percentil_90",
+                       "perc_90",
                        "media",
                        "variancia",
                        "sd",
                        "coef_assimetria",
                        "coef_curtose")
+
+  #teste para incluir estatísticas dos dados gerais (parâmetro)
+
+  if(dg == TRUE){
+
+    for(j in 1:length(vars)){
+
+
+      resumo[, paste0(vars[j])] <- c(nrow(dados),
+                                              min(dados[[vars[j]]]),
+                                              max(dados[[vars[j]]]),
+                                              max(dados[[vars[j]]])-min(dados[[vars[j]]]),
+                                              stats::quantile(dados[[vars[j]]], c(.1)),
+                                              stats::quantile(dados[[vars[j]]], c(.25)),
+                                              stats::quantile(dados[[vars[j]]], c(.5)),
+                                              stats::quantile(dados[[vars[j]]], c(.75)),
+                                              stats::quantile(dados[[vars[j]]], c(.9)),
+                                              mean(dados[[vars[j]]], na.rm = TRUE),
+                                              stats::var(dados[[vars[j]]], na.rm = TRUE),
+                                              stats::sd(dados[[vars[j]]], na.rm = TRUE),
+                                              (stats::quantile(dados[[vars[j]]], c(.75)) - 2 * stats::quantile(dados[[vars[j]]], c(.50)) + stats::quantile(dados[[vars[j]]], c(.25))) / (stats::quantile(dados[[vars[j]]], c(.75)) - stats::quantile(dados[[vars[j]]], c(.25))), # Coeficiente de Assimetria de Bowley
+                                              (stats::quantile(dados[[vars[j]]], c(.75)) - stats::quantile(dados[[vars[j]]], c(.25)))/(2*(stats::quantile(dados[[vars[j]]], c(.9))-stats::quantile(dados[[vars[j]]], c(.1))))) # Coeficiente Percentílico de Curtose
+    }
+  }
 
   #a seguir o primeiro for() acessa informações de cada condicional por vez
 
@@ -113,11 +159,11 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
       #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
 
-      dados_temp<-dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
+      dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
 
       #aqui ele é resumido à coluna definida por cada ciclo do segundo for
 
-      dados_temp<-subset(dados_temp, select=c(vars[j]))
+      dados_temp <- subset(dados_temp, select = c(vars[j]))
 
       #inserção de nova coluna no df resumo com as estatísticas calculadas
 
@@ -138,29 +184,6 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
     }
   }
 
-  #para o caso do parâmetro dg (dados gerais) estar definido como TRUE
-
-  if(dg == TRUE){
-
-    for(j in 1:length(vars)){
-
-    resumo[, paste(vars[j],".dados.gerais", sep = "")] <- c(nrow(dados),
-                                                            min(dados[[vars[j]]]),
-                                                            max(dados[[vars[j]]]),
-                                                            max(dados[[vars[j]]])-min(dados[[vars[j]]]),
-                                                            stats::quantile(dados[[vars[j]]], c(.1)),
-                                                            stats::quantile(dados[[vars[j]]], c(.25)),
-                                                            stats::quantile(dados[[vars[j]]], c(.5)),
-                                                            stats::quantile(dados[[vars[j]]], c(.75)),
-                                                            stats::quantile(dados[[vars[j]]], c(.9)),
-                                                            mean(dados[[vars[j]]], na.rm = TRUE),
-                                                            stats::var(dados[[vars[j]]], na.rm = TRUE),
-                                                            stats::sd(dados[[vars[j]]], na.rm = TRUE),
-                                                            (stats::quantile(dados[[vars[j]]], c(.75))-stats::quantile(dados[[vars[j]]], c(.5)))-(stats::quantile(dados[[vars[j]]], c(.5))-stats::quantile(dados[[vars[j]]], c(.25)))/(stats::quantile(dados[[vars[j]]], c(.75))-stats::quantile(dados[[vars[j]]], c(.5)))+(stats::quantile(dados[[vars[j]]], c(.5))-stats::quantile(dados[[vars[j]]], c(.25))),
-                                                            (stats::quantile(dados[[vars[j]]], c(.75))-stats::quantile(dados[[vars[j]]], c(.25)))/(2*(stats::quantile(dados[[vars[j]]], c(.9))-stats::quantile(dados[[vars[j]]], c(.1)))))
-    }
-  }
-
   #iniciar lista que vai armazenar plot de todos os gráficos juntos
 
   plot_td <- list()
@@ -173,13 +196,46 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
   #preparar saída com todos boxplots na mesma janela, definição defende do estado do parâmetro dg
 
-  if (dg == TRUE){
-    graphics::par(mfrow=c(nrow(priori)+1,length(vars)))
-  }else{
-    graphics::par(mfrow=c(nrow(priori),length(vars)))
+  min_max <- vector() #iniciar vetor que vai armazenar valores para definir min e max eixo y boxplot
+
+  #concatenar tds os valores das variáveis observadas
+
+  for (i in 1:length(vars)) {
+    min_max <- rbind(min_max,dados[[vars[i]]])
   }
 
-  #primeiro for para navegar entre priores
+  #deifinir efetivamente mínimo e máximo dos plots
+
+  lim_min_y <- min(min_max)
+  lim_max_y <- max(min_max)
+
+  #teste para incluir gráfico de dados gerais (parâmetro)
+
+  if (dg == TRUE){
+
+    graphics::par(mfrow=c(nrow(priori)+1,length(vars))) #grade com dados gerais
+
+    for(i in 1:length(vars)){
+
+      graphics::boxplot(dados[[vars[i]]],
+                        horizontal = hor,
+                        xlab = paste0(vars[i]),
+                        ylim=c(lim_min_y,lim_max_y))
+
+
+      tabs_ [[paste0(vars[i])]]<- as.data.frame(dados[[vars[i]]])
+      names(tabs_)[[ind]] <- paste0(vars[i])
+
+      ind <- ind + 1
+    }
+
+  }else{
+
+    graphics::par(mfrow=c(nrow(priori),length(vars))) #grade sem dados gerais
+
+  }
+
+  #primeiro for para navegar entre priores, gerar tabelas condicionais e criar um plot geral
 
   for (i in 1:nrow(priori)) {
 
@@ -187,18 +243,13 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
     for (j in 1:length(vars)) {
 
-      #definir limites da área de plotagem para melhor comparação visual entre as proris
-
-      lim_min_y <- min(dados[[vars[j]]])
-      lim_max_y <- max(dados[[vars[j]]])
-
       #dados_temp é um df temporário que assume os dados de cada priori por ciclo do primeiro for
 
       dados_temp <- dplyr::filter(dados, dados[[condicional]] == as.character(priori[i,1]))
 
       #aqui ele é resumido à coluna definida por cada ciclo do segundo for
 
-      dados_temp<-subset(dados_temp, select = c(vars[j]))
+      dados_temp <- subset(dados_temp, select = c(vars[j]))
 
       #aqui a lista de tabelas recebe cada tabela A|B e tem os nomes de cada coluna definido
 
@@ -212,41 +263,15 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
                         xlab = paste(vars[j],"|", priori[i, 1], sep = ""),
                         ylim=c(lim_min_y,lim_max_y))
 
-      #na última repetição, armazenar plotagem geral para retorno da função
-
-      if(nrow(priori)*length(vars) == ind){
-        graphics::mtext(paste("Evento(s)","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
-        plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
-        names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
-      }
-
       ind <- ind + 1 #incremento do índice que percorre a lista com as tabelas A|B
     }
   }
 
-  #para dg definido como TRUE acrescentar gráficos e tabelas com dados gerais
+  #armazenar plotagem geral para retorno da função
 
-  if(dg == TRUE){
-
-    for(i in 1:length(vars)){
-    lim_min_y <- min(dados[[vars[i]]])
-    lim_max_y <- max(dados[[vars[i]]])
-    graphics::boxplot(dados[[vars[i]]],
-                      horizontal = hor,
-                      xlab = paste(vars[i],".dados.gerais", sep = ""),
-                      ylim=c(lim_min_y,lim_max_y))
-    }
-
-    #atualização da captura do plot geral
-
-    plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
-    names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
-
-
-    for(i in 1:length(vars)){
-        tabs_ [[paste(vars[i],".dados.gerais", sep = "")]]<- dados[[vars[i]]]
-    }
-  }
+  graphics::mtext(paste("Evento(s)","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+  plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+  names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
 
   #preparar retorno da função
 
@@ -256,45 +281,26 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
   if(tabs == TRUE){
 
-  print(resumo)
+    print(t(resumo))
 
   }
 
   #organizar lista retornada pela função
 
-  retorno<-list("resumo" = resumo, "plot geral" = plot_td, "tabela geral" = tab_geral, "tabelas" = tabs_)
+  retorno <- list("resumo" = as.data.frame(t(resumo)),
+                  "plot geral" = plot_td,
+                  "tabela geral" = tab_geral,
+                  "tabelas" = tabs_)
 
   #ajustes para gráfico customizado, parametro graf definido pelo usuário
 
   if(!(is.null(grafs))){
 
-    #preparar teste para saber se há apenas um tipo de evento no gráfico
-    #quando só há um evento o eixo y mantém os mesmos limites em todos os boxplots
-    #facilitando a comparação
+    #iniciar lista que vai armazenar plots
 
-    teste_ <- list()
-    contrateste_ <- list()
+    plot_personal <- list()
 
-    for(i in 1:length(grafs)){
-      teste_[i] <- names(retorno[[4]][[grafs[i]]])
-      contrateste_[i] <- names(retorno[[4]][[grafs[1]]])
-    }
-
-    #resultado do teste define decisões sobre limites dos plots a seguir
-
-    teste <- isTRUE(all.equal(teste_, contrateste_))
-
-    if(teste){
-
-      #iniciar e preencher dataframe com y max e min
-
-      ymin_ymax <- data.frame()
-      for(i in 1:length(grafs)){
-       ymin_ymax <- rbind(ymin_ymax, retorno[[4]][[grafs[i]]])
-      }
-    }
-
-    #definir grade para graficos customizados
+    #definir grade para gráficos customizados
 
     graphics::par(mfrow = grade)
 
@@ -304,29 +310,67 @@ descritiva <- function(dados, condicional, vars, dg = FALSE, hor = FALSE, tabs =
 
       dados_custom <- retorno[[4]][[grafs[i]]]
 
-      if(teste){
-          graphics::boxplot(dados_custom,
-                          horizontal = hor,
-                          xlab=names(retorno[[4]][grafs[i]]),
-                          ylim=c(min(ymin_ymax), max(ymin_ymax)))
-      }else{
-          graphics::boxplot(dados_custom,
-                          horizontal = hor,
-                          xlab=names(retorno[[4]][grafs[i]]))
+      graphics::boxplot(dados_custom,
+                        horizontal = hor,
+                        xlab=names(retorno[[4]][grafs[i]]),
+                        ylim=c(lim_min_y, lim_max_y))
+
+      #testar parâmetro para inserir título no gráficos personalizados
+
+      if(sum(grade) == 2 && titulo != FALSE){
+
+        if(titulo == TRUE){
+
+          graphics::mtext(paste("Eventos","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título automático
+
+        }else{
+
+          graphics::mtext(titulo, side = 3, line = -2, outer = TRUE) #título personalizado
+
+        }
+      }
+
+      if(sum(grade) == 2){ #testar se plots são individuais para captura de um por vez
+
+        plot_personal[[i]] <- grDevices::recordPlot() #armazenar cada plot para retorno na função
+        names(plot_personal)[i] <- names(retorno[[4]][grafs[i]]) #renomear coluna para identificar melhor o retorno
+
       }
     }
 
-    #titulo do grafico customizado definido pelo parâmetro titulo = TRUE
+    #titulo geral do grafico customizado definido pelo parâmetro titulo = TRUE caso multiplos gráficos na mesma janela
 
-    if( titulo != FALSE){
-        if(titulo == TRUE)
-        {
-        graphics::mtext(paste("Eventos","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+    if (sum(grade) !=2){
+
+      if( titulo != FALSE){
+
+        if(titulo == TRUE){
+
+          graphics::mtext(paste("Eventos","|", condicional, sep = ""), side = 3, line = -2, outer = TRUE) #título geral
+
         }else{
-          graphics::mtext(titulo, side = 3, line = -2, outer = TRUE) #título geral
+
+          graphics::mtext(titulo, side = 3, line = -2, outer = TRUE) #título geral personalizado
         }
+      }
+
+      plot_personal[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+
     }
+
+    names(plot_personal)[1] <- "plot personalizado" #renomear coluna para identificar melhor o retorno
+
+    retorno <- list("resumo" =  as.data.frame(t(resumo)),
+                    "plot geral" = plot_td,
+                    "tabela geral" = tab_geral,
+                    "tabelas" = tabs_,
+                    "plot personalizado" = plot_personal)
+
   }
+
+  #resetar par(mfrow
+
+  graphics::par(mfrow=c(1, 1))
 
   #retorno da função
 

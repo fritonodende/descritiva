@@ -2,32 +2,44 @@
 % Please edit documentation in R/dens.R
 \name{dens.descritiva}
 \alias{dens.descritiva}
-\title{Sobreposição de histograma e curva da função de densidade}
+\title{Sobreposicao de histograma e curva da funcao de densidade}
 \usage{
 dens.descritiva(
   dados,
-  condicional,
   vars,
+  condicional,
+  classe = NULL,
   dg = FALSE,
+  fc.densidade = "ASGNB",
   grafs = NULL,
   grade = c(1, 1),
-  titulo = FALSE
+  titulo = FALSE,
+  fonte.tamanho = 1,
+  fonte.orientacao = "H"
 )
 }
 \arguments{
 \item{dados}{Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para plotar histograma e boxplot}
 
-\item{condicional}{Coluna em que está a informação conhecida}
-
 \item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão plotados o histograma e curva de densidade}
 
+\item{condicional}{Coluna em que está a informação conhecida}
+
+\item{classe}{Caso queira definir as classes que deseja analisar}
+
 \item{dg}{Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais}
+
+\item{fc.densidade}{Função densidade de probabilidade, defalut = "ASGNB". fc.densidade = "KDE" para Kernel density estimation}
 
 \item{grafs}{vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna}
 
 \item{grade}{vetor c(x, y) indicando a quantidade linhas e colunas em que serão impressos os gráficos customizados definos pelo parâmetro grafs}
 
 \item{titulo}{Lógico ou string, default = FALSE, TRUE para exibir título no plot geral no formato evento|condicional ou string no formato "título customizado"}
+
+\item{fonte.tamanho}{formatação dos tamanho dos valores impressos no eixo x}
+
+\item{fonte.orientacao}{formatação da orientação do valores impressos no eixo x, default = "H" para valores na horizontal, ou seja, paralelos ao eixo x. fonte.orientacao = "V" para valores na vertical, ou seja, perpendiculares ao eixo x.}
 }
 \value{
 Lista com Plots de histogramas e curvas de densidade
@@ -37,6 +49,6 @@ Lê um conjunto de dados e plota a sobreposição do seu histograma e curva de d
 }
 \examples{
 
-dens.descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+dens.descritiva(iris, c("Petal.Length", "Sepal.Length"), "Species")
 
 }

@@ -6,8 +6,9 @@
 \usage{
 disp.descritiva(
   dados,
-  condicional,
   vars,
+  condicional,
+  classe = NULL,
   grafs = NULL,
   grade = c(1, 1),
   titulo = FALSE
@@ -16,9 +17,11 @@ disp.descritiva(
 \arguments{
 \item{dados}{Dataframe com ao menos três colunas, uma com a informação a priori e no mínimo outras duas com valores para coordenadas x e y}
 
+\item{vars}{Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano}
+
 \item{condicional}{Coluna em que está a informação conhecida (priori)}
 
-\item{vars}{Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano}
+\item{classe}{Caso queira definir as classes que deseja analisar}
 
 \item{grafs}{vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna}
 
@@ -39,13 +42,13 @@ Essa função lê um conjunto de dados e plota diagramas de dispersão para obse
 #               info a priori "Species"
 #               colunas para coordenadas x e y "Petal.Length" e "Petal.Width"
 
-disp.descritiva(iris, "Species", c("Sepal.Length", "Sepal.Width"))
+disp.descritiva(iris, c("Sepal.Length", "Sepal.Width"), "Species")
 
 #Exemplo 2:
 #função recebe: dataset mtcars,
 #               info a priori "cyl"
 #               colunas para coordenadas x e y "mpg" e "qsec"
 
-disp.descritiva(mtcars, "cyl", c("mpg", "qsec"))
+disp.descritiva(mtcars, c("mpg", "qsec"), "cyl")
 
 }

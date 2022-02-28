@@ -2,12 +2,13 @@
 % Please edit documentation in R/descritiva.R
 \name{descritiva}
 \alias{descritiva}
-\title{Breve análise descritiva de uma variável aleatória contínua}
+\title{Breve analise descritiva de uma variavel aleatoria continua}
 \usage{
 descritiva(
   dados,
-  condicional,
   vars,
+  condicional,
+  classe = NULL,
   dg = FALSE,
   hor = FALSE,
   tabs = TRUE,
@@ -19,9 +20,11 @@ descritiva(
 \arguments{
 \item{dados}{Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para calcular estatísticas}
 
+\item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão calculadas as estatísticas}
+
 \item{condicional}{Coluna em que está a informação conhecida}
 
-\item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão calculadas as estatísticas}
+\item{classe}{Caso queira definir as classes que deseja analisar}
 
 \item{dg}{Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais}
 
@@ -42,11 +45,13 @@ Dataframe 14 x n -onde n é a quantidade de variáveis observadas- com mínimo, 
 Essa função lê um conjunto de dados e com base em uma informação a priori retorna algumas medidas de posição além de desvio padrão, coeficiente de assimetria de Bowley e coeficiente percentílico de curtose; a função ainda plota boxplots do conjunto de dados
 }
 \details{
-Para comparar diagramas de dispersão duas variáveis e uma informação conhecida de um conjunto de dados utilizar \link[=dens.descritiva]{disp.descritiva()}
+Para comparar diagramas de dispersão duas variáveis e uma informação conhecida de um conjunto de dados utilizar \code{\link[=disp.descritiva]{disp.descritiva()}}
 
 Para comparar histograma e curva da função de densidade do conjunto de dados utilizar \code{\link[=dens.descritiva]{dens.descritiva()}}. A quantidade de classes é definida pela regra de Sturges
 
-Para variáveis qualitativas ou categóricas utilizar \link[=dens.descritiva]{freq.descritiva()} para obter tabela de frequência e gráfico de barras
+Para variáveis qualitativas ou categóricas utilizar \code{\link[=freq.descritiva]{freq.descritiva()}} para obter tabela de frequência e gráfico de barras
+
+Utilizar \code{\link[=asg.est]{asg.est()}} para estimar parâmetros mi, sigma e alpha para a função densidade de probabilidade da distribuição Alpha Skew Gaussian (ASG)
 }
 \examples{
 
@@ -55,14 +60,14 @@ Para variáveis qualitativas ou categóricas utilizar \link[=dens.descritiva]{fr
 #               info a priori "Species"
 #               observações das colunas "Petal.Length" e "Sepal.Length"
 
-descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+descritiva(iris, c("Petal.Length", "Sepal.Length"), "Species")
 
 #Exemplo 2:
 #função recebe: dataset mtcars,
 #               info a priori "cyl"
 #               observações da colunas "mpg"
 
-descritiva(mtcars, "cyl", "mpg")
+descritiva(mtcars, "mpg", "cyl")
 
 }
 \seealso{
@@ -71,4 +76,6 @@ descritiva(mtcars, "cyl", "mpg")
 \code{\link{disp.descritiva}} Retorna diagrama de dispersão
 
 \code{\link{freq.descritiva}} Retorna tabela de frequência e gráfico de barra
+
+\code{\link{asg.est}} Retorna valores de mi, sigma e alpha para a função densidade de probabilidade da distribuição Alpha Skew Gaussian (ASG)
 }

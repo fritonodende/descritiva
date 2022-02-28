@@ -12,7 +12,7 @@ vignette: >
 ---
 
 ### Para variáveis contínuas
-Breve análise descritiva de uma variável aleatória contínua. Nesse contexto a função descritiva() lê um conjunto de dados e retorna algumas medidas de posição e desvio padrão além de plotar seus boxplots.
+Breve análise descritiva de variáveis aleatórias contínuas, além de variáveis discretas e qualitativas, levando em consideração a premissa que o evento A é observado dado um evento B conhecido. Nesse contexto a função descritiva() lê um conjunto de dados e retorna algumas medidas de posição e desvio padrão além de plotar seus boxplots.
 
 Carregar o pacote: 
 
@@ -21,45 +21,106 @@ Carregar o pacote:
 library(descritiva)
 ```
 
-Passar para a função o dataframe iris; a coluna Species, com a informação a priori; e uma lista que contém as colunas Petal.Length e Sepal.Length, a partir das quais serão calculadas as estatísticas que a função retorna. Seguem boxplot e dataframe com as informações calculadas
+Passar para a função o dataframe iris; a coluna Species, com a informação a priori; e uma lista que contém as colunas Petal.Length e Sepal.Length, a partir das quais serão calculadas as estatísticas que a função retorna. Seguem, em sua forma mais automática, boxplot e dataframe com as informações calculadas
 
 ```{r fig.height=8, fig.width=5}
 #função recebe df, coluna com info a priori e lista de variáveis
-descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+descritiva(iris, c("Petal.Length", "Sepal.Length"), "Species")
 ```
 
+A partir dessa primeira vista é possível, através de alguns parâmetros da função, criar layouts que atendam à necessidades mais específicas. Por exemplo, para comparar o comportamento da variável Petal.Length (evento A) de acordo com cada espécie de flor (evento B). Os parâmetros são explicados na documentação do pacote.
+
+```{r fig.height=8, fig.width=5}
+desc <- descritiva(iris,
+                   c("Petal.Length", "Sepal.Length"),
+                   "Species",
+                   tabs = FALSE,
+                   hor = TRUE,
+                   dg = TRUE,
+                   grafs = c(1,3,5),
+                   grade = c(3,1),
+                   titulo = "Sepal.Length | Species")
+
+#observando objeto descritiva
+
+summary(desc)
+
+row.names(desc[[1]])
+
+colnames(desc[[1]])
+
+knitr::kable(t(desc[[1]][c(1,3,5,7),]))
+```
+Com essas possibilidades claras, muitas combinações simples e rápidas são possíveis.
 
 ### Gráfico de dispersão
 
-O Pacote possui ainda a função disp.descritiva() que plota o diagrama de dispersão de duas varáveis (x, y) de acordo com uma determina inforamação conhecida.
+O Pacote possui ainda a função disp.descritiva() que plota o diagrama de dispersão de duas varáveis (x, y) de acordo com uma determina informação conhecida.
 
 A função recebe como argumentos um dataframe, o nome da coluna com a informação conhecida e uma lista com os nomes das colunas onde estão os dados que serão plotados no plano coordenado. É importante apontar que essa lista deve conter apenas a referência de duas colunas, uma vez que elas correspondem aos eixos x e y respectivamente.
 
 ```{r fig.height = 3, fig.width = 8}
 #função recebe df, coluna com info a priori e lista de variáveis
-disp.descritiva(iris, "Species", c("Sepal.Length", "Sepal.Width"))
+disper <- disp.descritiva(iris, c("Sepal.Length", "Sepal.Width"), "Species")
 ```
+Os parâmetros citados acima constituem o mínimo para a função rodar, segue uma outra plotagem apenas alterando alguns parâmetros da função, mais detalhes na documentação.
+```{r fig.height = 3, fig.width = 8}
+disper <- disp.descritiva(iris,
+                          c("Sepal.Length", "Sepal.Width"),
+                          "Species",
+                          grafs = c(2,3,4),
+                          grade = c(1,3),
+                          titulo = "Sepal.Legth | Species")
 
+
+
+```
 
 ### Sobreposição de histograma e função de densidade
-Para uma comparação visual entre o histograma e a curva de densidade do conjunto de dados.
+
+Para uma comparação visual entre o histograma e a curva de densidade do conjunto de dados, aqui a função recebe apenas o essencial para funcionar.
 
 
-```{r fig.height = 8, fig.width = 5}
-dens.descritiva(iris, "Species", c("Petal.Length", "Sepal.Length"))
+```{r fig.height=8, fig.width=5, warning=FALSE}
+dens.descritiva(iris, c("Petal.Length", "Sepal.Length"), "Species")
 ```
 
+Mais uma vez, com o auxilio de alguns parâmetros, detalhados na ajuda, é possível organizar os gráficos da maneira que for mais conveniente.
+
+```{r fig.height = 8, fig.width = 5, warning=FALSE}
+dens.descritiva(iris, c("Petal.Length", "Sepal.Length"), "Species", dg = TRUE, grafs = c(1,3,5,7), titulo = TRUE)
+```
+
+
 ### Para variáveis qualitativas e categorias
-Como estratégia de análise descritiva de variáveis qualitativas e categóricas o pacote oferece a possibilidade de criar uma tabela de frequência de conjunto de dados
+Como estratégia de análise descritiva de variáveis qualitativas e categóricas o pacote oferece a possibilidade de criar uma tabela de frequência de conjunto de dados. Rodando no seu modo mais automatizado e com os parâmetros mínimos, esse é o comportamento da função:
 
 ```{r fig.height = 5, fig.width = 5}
 mtcars_ <- mtcars
-mtcars_$am[mtcars_$am==0]<-"automatico"
-mtcars_$am[mtcars_$am==1]<-"manual"
-tab<-freq.descritiva(mtcars_, "am", c("cyl", "gear"))
-print(tab)
+mtcars_$am[mtcars_$am==0] <- "automatico"
+mtcars_$am[mtcars_$am==1] <- "manual"
+tab <- freq.descritiva(mtcars_, c("cyl", "gear"), "am")
 ```
 
+E mais uma vez a função pode ser parametrizada e oferecer um retorno mais amigável
+
+```{r fig.height = 5, fig.width = 5}
+mtcars_ <- mtcars
+mtcars_$am[mtcars_$am == 0] <- "automatico"
+mtcars_$am[mtcars_$am == 1] <- "manual"
+freq <- freq.descritiva(mtcars_,
+                c("cyl", "gear"),
+                "am",
+                grafs = c(1,3),
+                grade = c(1,2),
+                titulo = "Cilindros | tipo de câmbio")
+
+summary(freq)
+
+names(freq[[1]])
+
+knitr::kable(freq[[1]][c(1,3)])
+```
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -67,3 +128,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
+
+

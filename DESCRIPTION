@@ -1,5 +1,5 @@
 Package: descritiva
-Title: Breve análise descritiva
+Title: Breve analise descritiva
 Version: 0.1
 Authors@R: 
     person(given = "Gilson",
@@ -13,7 +13,11 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
-    dplyr
+    arules,
+    dplyr,
+    maxLik,
+    polynom,
+    qdapRegex
 Suggests: 
     knitr,
     rmarkdown

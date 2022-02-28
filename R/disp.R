@@ -6,6 +6,8 @@
 #'
 #' @param condicional Coluna em que está a informação conhecida (priori)
 #'
+#' @param classe Caso queira definir as classes que deseja analisar
+#'
 #' @param vars Lista com os nomes das duas colunas ( x e y, nessa ordem) que formarão as coordenadas do plano cartesiano
 #'
 #' @param grafs vetor c(1:n) indicando os gráficos que serão exibidos com o plot customizado, o índice do gráfico corresponde a sua posição no plot geral que a função retorna
@@ -25,16 +27,22 @@
 #' #               info a priori "Species"
 #' #               colunas para coordenadas x e y "Petal.Length" e "Petal.Width"
 #'
-#' disp.descritiva(iris, "Species", c("Sepal.Length", "Sepal.Width"))
+#' disp.descritiva(iris, c("Sepal.Length", "Sepal.Width"), "Species")
 #'
 #' #Exemplo 2:
 #' #função recebe: dataset mtcars,
 #' #               info a priori "cyl"
 #' #               colunas para coordenadas x e y "mpg" e "qsec"
 #'
-#' disp.descritiva(mtcars, "cyl", c("mpg", "qsec"))
+#' disp.descritiva(mtcars, c("mpg", "qsec"), "cyl")
 #'
-disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,1), titulo = FALSE){
+disp.descritiva <- function(dados,
+                            vars,
+                            condicional,
+                            classe = NULL,
+                            grafs = NULL,
+                            grade = c(1,1),
+                            titulo = FALSE){
 
   #confirmar se objeto enviado para função é um df
 
@@ -60,6 +68,12 @@ disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,
 
   priori <- as.data.frame(table(dados[[condicional]]))
 
+  #caso a classe seja definida
+
+  if(!is.null(classe)){
+    priori <- dplyr::filter(priori, priori[[1]] %in% classe)
+  }
+
   #definir limites eixos x e y
 
   lim_min_x <- min(dados[[vars[1]]])
@@ -69,8 +83,8 @@ disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,
 
   #iniciar listas que serão parâmetros dos gráficos
 
-  shapes <-vector()           #formas
-  config_legenda <- vector()  #cores
+  shapes <- vector()          #formas
+  config_legenda <- vector()  #legenda
 
   #for preenche listas de configuração
 
@@ -83,10 +97,9 @@ disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,
 
   shapes <- shapes[as.numeric(dados[[3]])]
 
-  #iniciar lista que vai armazenar plot geral
+  #iniciar listas que vão armazenar plot geral e tabelas
 
   plot_td <- list()
-
   tabelas <- list()
 
   #preparar saída para gráfico geral
@@ -103,19 +116,25 @@ disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,
                  ylim = c(lim_min_y,lim_max_y),
                  xlab = vars[1],
                  ylab = vars[2],
-                 col = as.integer(dados[[3]])+1,
+                 col = as.integer(dados[[3]]) + 1,
                  pch = shapes,
-                 cex = 1.5)
+                 cex = 1)
 
   #construção da legenda e título geral
 
-  graphics::legend("bottomright", title = condicional, legend = levels(dados[[3]]), col = as.integer(config_legenda)+nrow(priori), pch = as.integer(config_legenda)) #legenda
-  plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
-  names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
+   graphics::legend("bottomright",
+                   adj = 0,
+                   cex = .8,
+                   legend = c(priori[[1]]),
+                   col = as.integer(config_legenda)+nrow(priori),
+                   pch = as.integer(config_legenda))
+
+  #armazenar plot geral
+
   tabelas[[1]] <- dados   #lista com tabelas utilizadas para construção de cada gráfico
   names(tabelas)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
 
-  #for para construir um gráfico por vez
+  #for para construir os gráficos de cada condicional por vez
 
   for (i in 1:nrow(priori)) {
 
@@ -133,26 +152,85 @@ disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,
                    ylab = vars[2],
                    col = as.integer(config_legenda[i])+nrow(priori),
                    pch = i+14,
-                   cex = 1.5)
+                   cex = 1)
 
-    #contrução e atribuição das colunas das listas ciniciadas anteriormente
+    #construção e atribuição das colunas das listas iniciadas anteriormente
 
-    colnome <- paste(paste(vars[1], ' x ', vars[2],' | ', priori[i, 1], sep = ""))
-    tabelas[[i+1]]<-dados_temp
+    colnome <- paste(paste(vars[1], ' x ', vars[2], ' | ', priori[i, 1], sep = ""))
+    tabelas[[i+1]] <- dados_temp
     names(tabelas)[i+1] <- colnome
   }
+
+  graphics::mtext(paste("Evento A x Evento B"," | ", condicional, sep = ""),   #título geral
+                  side = 3, line = -1.4, outer = TRUE)
+
+  plot_td[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+  names(plot_td)[1] <- "plot geral" #renomear coluna para identificar melhor o retorno
 
   #preparar lista que a função retorna
 
   retorno<-list("tabelas" = tabelas, "plot geral"=plot_td)
 
+  #ajustes para gráfico customizado, parametro graf definido pelo usuário
+
   if(!(is.null(grafs))){
+
+    #iniciar lista que vai armazenar plots
+
+    plot_personal <- list()
 
     graphics::par(mfrow = grade)
 
+    #testar se na lista de gráficos personalizados há o grafico geral
+
+    if("1" %in% grafs){ #if para exibir gráfico geral quando solicitado
+
+      index<-match(c(1), grafs)
+
+      graphics::plot(x = (unlist(retorno[[1]][[grafs[index]]][1])), y = (unlist(retorno[[1]][[grafs[index]]][2])),
+                     main = paste(names(retorno[[1]][grafs[index]]), sep = ""),
+                     font.main = 1,
+                     cex.main = .99,
+                     xlim = c(lim_min_x,lim_max_x),
+                     ylim = c(lim_min_y,lim_max_y),
+                     xlab = vars[1],
+                     ylab = vars[2],
+                     col = as.integer(dados[[3]]) + 1,
+                     pch = shapes,
+                     cex = 1)
+
+      graphics::legend("bottomright",
+                       adj = 0,
+                       cex = .8,
+                       x.intersp = .80,
+                       y.intersp = .80,
+                       legend = c(priori[[1]]),
+                       col = as.integer(config_legenda)+nrow(priori),
+                       pch = as.integer(config_legenda))
+
+
+      plot_personal[[1]] <- grDevices::recordPlot() #armazenar plot geral para retorno na função
+      names(plot_personal)[1] <- names(retorno[[1]][1]) #renomear coluna para identificar melhor o retorno
+
+      #remover solicitação do gráfico geral da lista grafs
+
+      grafs<-grafs[-index]
+    }
+
+    #ajuste mas listas shapes e grafs para manter mesmas figuras pch e cores em todos os gráficos
+
+    shapes <- shapes[!duplicated(shapes)]
+    grafs_aux<-grafs-1
+    teste<-as.numeric(dados[[3]])
+    index<-which(teste %in% grafs_aux)
+    graf.color<-teste[index]
+    graf.color <- graf.color[!duplicated(graf.color)]
+
+    #plotar demais gáficos personalizados
+
     for(i in 1:length(grafs)){
 
-      graphics::plot(x = (unlist(retorno[[1]][[grafs[i]]][1])), y = (unlist(retorno[[1]][[grafs[i]]][2])), #passo 4
+      graphics::plot(x = (unlist(retorno[[1]][[grafs[i]]][1])), y = (unlist(retorno[[1]][[grafs[i]]][2])),
                      main = paste(names(retorno[[1]][grafs[i]]), sep = ""),
                      font.main = 1,
                      cex.main = .99,
@@ -160,19 +238,37 @@ disp.descritiva <- function(dados, condicional, vars, grafs = NULL, grade = c(1,
                      ylim = c(lim_min_y,lim_max_y),
                      xlab = vars[1],
                      ylab = vars[2],
-                     col = as.integer(dados[[3]])+i,
-                     pch = shapes+i,
-                     cex = 1.5)
+                     col = as.integer(graf.color[i]+1),
+                     pch = shapes[grafs[i]-1],
+                     cex = 1)
+
+      plot_personal[[i]] <- grDevices::recordPlot() #armazenar plot para retorno na função
+      names(plot_personal)[i] <- names(retorno[[1]][i]) #renomear coluna para identificar melhor o retorno
     }
 
+    #teste para inserir título
+
     if( titulo != FALSE){
-      if(titulo == TRUE)
-      {
-        graphics::mtext(paste("Eventos A x B","|", condicional, sep = ""), side = 3, line = -1.4, outer = TRUE) #título geral
-      }else{
-        graphics::mtext(titulo, side = 3, line = -1.4, outer = TRUE) #título geral
+
+      if(sum(grade) > 2){
+
+        if (is.logical(titulo)){
+
+            graphics::mtext(paste("Eventos A x B"," | ", condicional, sep = ""),
+                            side = 3, line = -1.4, outer = TRUE) #título geral padrão
+         }else{
+
+            graphics::mtext(titulo, side = 3, line = -1.4, outer = TRUE) #título geral personalizado
+        }
       }
     }
+
+    retorno<-list("tabelas" = tabelas,
+                  "plot geral"=plot_td,
+                  "plot personalizado" = plot_personal)
+
   }
+
   return(invisible(retorno))
+
 }

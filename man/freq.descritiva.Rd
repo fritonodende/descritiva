@@ -2,12 +2,13 @@
 % Please edit documentation in R/freq.R
 \name{freq.descritiva}
 \alias{freq.descritiva}
-\title{Tabela de frequência}
+\title{Tabelas de frequencia e graficos de barra}
 \usage{
 freq.descritiva(
   dados,
-  condicional,
   vars,
+  condicional,
+  classe = NULL,
   dg = FALSE,
   tabs = FALSE,
   grafs = NULL,
@@ -18,9 +19,11 @@ freq.descritiva(
 \arguments{
 \item{dados}{Dataframe com ao menos duas colunas, uma com a informação a priori e outra(s) com valores para plotar histograma e boxplot}
 
+\item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão plotados o gráfico de barras e construida a tabela de frequência}
+
 \item{condicional}{Coluna em que está a informação conhecida}
 
-\item{vars}{Lista com nomes das colunas em que estão os valores com os quais serão plotados o gráfico de barras e construida a tabela de frequência}
+\item{classe}{Caso queira definir as classes que deseja analisar}
 
 \item{dg}{Lógico, default = FALSE, TRUE para exibir resumo e gráficos incluindo dados gerais}
 
@@ -43,6 +46,6 @@ Lê conjunto de dados e retorna uma tabela de frequência com observações, fre
 mtcars_ <- mtcars
 mtcars_$am[mtcars_$am == 0] <- "automatico"
 mtcars_$am[mtcars_$am == 1] <- "manual"
-freq.descritiva(mtcars_, "am", c("cyl", "gear"))
+freq.descritiva(mtcars_, c("cyl", "gear"), "am")
 
 }
